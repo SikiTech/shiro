@@ -44,7 +44,9 @@ public class AuthRealm extends AuthorizingRealm {
     protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken authenticationToken) throws AuthenticationException {
         UsernamePasswordToken token = (UsernamePasswordToken) authenticationToken;
         String username = token.getUsername();
+        // 获取密文密码
         String password = shiroSampleDao.getPasswordByUsername(username);
+        // 第一个参数principal 表示用户信息，
         return new SimpleAuthenticationInfo(username, password, super.getName());
     }
 
@@ -56,6 +58,7 @@ public class AuthRealm extends AuthorizingRealm {
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principalCollection) {
         String username = (String)super.getAvailablePrincipal(principalCollection);
         SimpleAuthorizationInfo authorizationInfo = new SimpleAuthorizationInfo();
+        // 获取数据库的记录
         Set<String> roles = shiroSampleDao.getRolesByUsername(username);
         authorizationInfo.setRoles(roles);
         roles.forEach(role -> {
