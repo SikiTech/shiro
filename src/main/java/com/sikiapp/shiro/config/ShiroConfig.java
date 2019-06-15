@@ -12,8 +12,10 @@ import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.DependsOn;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -38,6 +40,7 @@ public class ShiroConfig {
     }
 
     @Bean(name = "securityManager")
+    @DependsOn(value = {"authRealm"})
     public DefaultWebSecurityManager getDefaultWebSecurityManager(AuthRealm authRealm) {
         DefaultWebSecurityManager defaultWebSecurityManager = new DefaultWebSecurityManager();
         defaultWebSecurityManager.setRealm(authRealm);
@@ -49,13 +52,21 @@ public class ShiroConfig {
         return new LifecycleBeanPostProcessor();
     }
 
+    @Bean
+    public DefaultAdvisorAutoProxyCreator getDefaultAdvisorAutoProxyCreator() {
+        // 在@Controller注解的类的方法中加入@RequiresRole等shiro注解，会导致该方法无法映射请求，导致返回404
+        DefaultAdvisorAutoProxyCreator autoProxyCreator = new DefaultAdvisorAutoProxyCreator();
+        autoProxyCreator.setProxyTargetClass(true);
+        return autoProxyCreator;
+    }
+
     @Bean(name = "shiroFilter")
     public ShiroFilterFactoryBean getShiroFilterFactoryBean(DefaultWebSecurityManager securityManager) {
         ShiroFilterFactoryBean shiroFilterFactoryBean = new ShiroFilterFactoryBean();
         // 必须设置 SecurityManager
         shiroFilterFactoryBean.setSecurityManager(securityManager);
         // 如果不设置默认会自动寻找Web工程根目录下的"/login"页面
-        shiroFilterFactoryBean.setLoginUrl("/login");
+        shiroFilterFactoryBean.setLoginUrl("/user/login");
         // 登录成功后要跳转的连接
         shiroFilterFactoryBean.setSuccessUrl("/index");
         shiroFilterFactoryBean.setUnauthorizedUrl("/denied");
@@ -71,16 +82,18 @@ public class ShiroConfig {
         // TODO 重中之重啊，过滤顺序一定要根据自己需要排序
         Map<String, String> filterChainDefinitionMap = new LinkedHashMap<>();
         // 需要验证的写 authc 不需要的写 anon
+        filterChainDefinitionMap.put("/user/login", "anon");
+        filterChainDefinitionMap.put("/user/logout", "anon");
         filterChainDefinitionMap.put("/resource/**", "anon");
         filterChainDefinitionMap.put("/install", "anon");
-        filterChainDefinitionMap.put("/hello", "anon");
+        filterChainDefinitionMap.put("t5/hello", "anon");
         logger.info("##################从数据库读取权限规则，加载到shiroFilter中##################");
 
         // 不用注解也可以通过 API 方式加载权限规则
         Map<String, String> permissions = new LinkedHashMap<>();
-        permissions.put("/roles/find", "perms[user:find]");
-        permissions.put("/**", "authc");
+        permissions.put("/roles/find", "authc, perms[user:find]");
         filterChainDefinitionMap.putAll(permissions);
+        filterChainDefinitionMap.put("/**", "authc");
         shiroFilterFactoryBean.setFilterChainDefinitionMap(filterChainDefinitionMap);
     }
 

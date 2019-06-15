@@ -13,6 +13,7 @@ import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.subject.Subject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @version: V1.0
  **/
 @RestController
+@RequestMapping("/t3")
 public class ShiroSampleController {
 
     @Autowired
@@ -52,5 +54,13 @@ public class ShiroSampleController {
     public String write() {
         return this.shiroSampleService.write();
     }
+
+    // 这里没有任何shiro注解，且在ShiroConfig配置了chain.addPathDefinition("/**", "anon");
+    // 即任何请求都可以匿名访问。因此该接口无论是用户未登录还是用户登录了都可以访问
+    @GetMapping("/hello")
+    public String hello() {
+        return "hello spring boot";
+    }
+
 
 }
