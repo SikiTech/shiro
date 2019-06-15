@@ -7,14 +7,11 @@
  */
 package com.sikiapp.shiro.config;
 
-import org.apache.shiro.cache.ehcache.EhCacheManager;
 import org.apache.shiro.spring.LifecycleBeanPostProcessor;
-import org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor;
 import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -30,9 +27,9 @@ import java.util.Map;
  * @version: V1.0
  **/
 @Configuration
-public class ShiroConfiguration {
+public class ShiroConfig {
 
-    private static final Logger logger = LoggerFactory.getLogger(ShiroConfiguration.class);
+    private static final Logger logger = LoggerFactory.getLogger(ShiroConfig.class);
 
     @Bean(name = "authRealm")
     public AuthRealm authRealm() {
@@ -82,8 +79,8 @@ public class ShiroConfiguration {
         // 不用注解也可以通过 API 方式加载权限规则
         Map<String, String> permissions = new LinkedHashMap<>();
         permissions.put("/roles/find", "perms[user:find]");
+        permissions.put("/**", "authc");
         filterChainDefinitionMap.putAll(permissions);
-        filterChainDefinitionMap.put("/**", "authc");
         shiroFilterFactoryBean.setFilterChainDefinitionMap(filterChainDefinitionMap);
     }
 

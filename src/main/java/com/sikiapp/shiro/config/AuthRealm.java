@@ -7,17 +7,15 @@
  */
 package com.sikiapp.shiro.config;
 
-import com.sikiapp.springbootinaction.db.DBCache;
-import com.sikiapp.springbootinaction.model.User;
-import org.apache.shiro.SecurityUtils;
+import com.sikiapp.shiro.dao.ShiroSampleDao;
 import org.apache.shiro.authc.*;
 import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
-import org.apache.shiro.session.Session;
 import org.apache.shiro.subject.PrincipalCollection;
+import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.*;
+import java.util.Set;
 
 /**
  * @className: AuthRealm
@@ -28,6 +26,9 @@ import java.util.*;
  * @version: V1.0
  **/
 public class AuthRealm extends AuthorizingRealm {
+
+    @Autowired
+    private ShiroSampleDao shiroSampleDao;
 
     /**
      * 认证回调函数,登录时调用
@@ -40,22 +41,11 @@ public class AuthRealm extends AuthorizingRealm {
      * CredentialsMatcher使用盐加密传入的明文密码和此处的密文密码进行匹配。
      */
     @Override
-    protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken token) throws AuthenticationException {
-        String principal = (String) token.getPrincipal();
-        User user = Optional.ofNullable(DBCache.USERS_CACHE.get(principal))
-                .orElseThrow(UnknownAccountException::new);
-        if (user.getLocked()) {
-            throw new LockedAccountException();
-        }
-        // 从数据库查询出来的账号名和密码,与用户输入的账号和密码对比
-        // 当用户执行登录时,在方法处理上要实现 user.login(token)
-        // 然后会自动进入这个类进行认证
-        // 交给 AuthenticatingRealm 使用 CredentialsMatcher 进行密码匹配，如果觉得人家的不好可以自定义实现
-        // TODO 如果使用 HashedCredentialsMatcher 这里认证方式就要改一下 SimpleAuthenticationInfo authenticationInfo = new SimpleAuthenticationInfo(principal, "密码", ByteSource.Util.bytes("密码盐"), getName());
-        SimpleAuthenticationInfo authenticationInfo = new SimpleAuthenticationInfo(principal, user.getPassword(), getName());
-        Session session = SecurityUtils.getSubject().getSession();
-        session.setAttribute("USER_SESSION", user);
-        return authenticationInfo;
+    protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken authenticationToken) throws AuthenticationException {
+        UsernamePasswordToken token = (UsernamePasswordToken) authenticationToken;
+        String username = token.getUsername();
+        String password = shiroSampleDao.getPasswordByUsername(username);
+        return new SimpleAuthenticationInfo(username, password, super.getName());
     }
 
     /**
@@ -63,21 +53,16 @@ public class AuthRealm extends AuthorizingRealm {
      * 如果需要动态权限,但是又不想每次去数据库校验,可以存在ehcache中.自行完善
      */
     @Override
-    protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principal) {
-        Session session = SecurityUtils.getSubject().getSession();
-        User user = (User) session.getAttribute("USER_SESSION");
-        // 权限信息对象info,用来存放查出的用户的所有的角色（role）及权限（permission）
-        SimpleAuthorizationInfo info = new SimpleAuthorizationInfo();
-        // 用户的角色集合
-        Set<String> roles = new HashSet<>();
-        roles.add(user.getRoleName());
-        info.setRoles(roles);
-        // 用户的角色对应的所有权限，如果只使用角色定义访问权限，下面可以不要
-        // 只有角色并没有颗粒度到每一个按钮 或 是操作选项  PERMISSIONS 是可选项
-        final Map<String, Collection<String>> permissionsCache = DBCache.PERMISSIONS_CACHE;
-        final Collection<String> permissions = permissionsCache.get(user.getRoleName());
-        info.addStringPermissions(permissions);
-        return info;
+    protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principalCollection) {
+        String username = (String)super.getAvailablePrincipal(principalCollection);
+        SimpleAuthorizationInfo authorizationInfo = new SimpleAuthorizationInfo();
+        Set<String> roles = shiroSampleDao.getRolesByUsername(username);
+        authorizationInfo.setRoles(roles);
+        roles.forEach(role -> {
+            Set<String> permissions = shiroSampleDao.getPermissionsByRole(role);
+            authorizationInfo.addStringPermissions(permissions);
+        });
+        return authorizationInfo;
     }
 
 }
