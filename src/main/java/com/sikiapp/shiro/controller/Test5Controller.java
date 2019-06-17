@@ -62,13 +62,11 @@ public class Test5Controller {
         return "gradleBuild";
     }
 
-
     @RequiresRoles("js")
     @GetMapping("/js")
     public String js() {
         return "js programmer";
     }
-
 
     @RequiresRoles("python")
     @GetMapping("/python")
