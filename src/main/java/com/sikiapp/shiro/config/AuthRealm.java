@@ -9,11 +9,10 @@ package com.sikiapp.shiro.config;
 
 import com.sikiapp.shiro.dao.ShiroSampleDao;
 import com.sikiapp.shiro.entity.User;
+import com.sikiapp.shiro.service.AuthorizationService;
 import org.apache.shiro.authc.*;
-import org.apache.shiro.authc.credential.HashedCredentialsMatcher;
 import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
-import org.apache.shiro.crypto.hash.Sha256Hash;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.util.ByteSource;
@@ -34,16 +33,6 @@ public class AuthRealm extends AuthorizingRealm {
     @Autowired
     private ShiroSampleDao shiroSampleDao;
 
-    //告诉shiro如何根据获取到的用户信息中的密码和盐值来校验密码
-    {
-        //设置用于匹配密码的CredentialsMatcher
-        HashedCredentialsMatcher hashMatcher = new HashedCredentialsMatcher();
-        hashMatcher.setHashAlgorithmName(Sha256Hash.ALGORITHM_NAME);
-        hashMatcher.setStoredCredentialsHexEncoded(false);
-        hashMatcher.setHashIterations(1024);
-        this.setCredentialsMatcher(hashMatcher);
-    }
-
     /**
      * 认证回调函数,登录时调用
      * 首先根据传入的用户名获取User信息；然后如果user为空，那么抛出没找到帐号异常UnknownAccountException；
@@ -59,9 +48,12 @@ public class AuthRealm extends AuthorizingRealm {
         UsernamePasswordToken token = (UsernamePasswordToken) authenticationToken;
         String username = token.getUsername();
         // 获取密文密码
-        User user = shiroSampleDao.findUserByName(username);
+//        User user = shiroSampleDao.findUserByName(username);
+        User user = AuthorizationService.USERS_CACHE.get(username);
+
         // 第一个参数principal 表示用户信息，
         SimpleAuthenticationInfo info = new SimpleAuthenticationInfo(user, user.getPwd(), super.getName());
+        // 如果设置了加盐，则使用加密算法
         if (user.getSalt() != null) {
             info.setCredentialsSalt(ByteSource.Util.bytes(user.getSalt()));
         }
@@ -74,7 +66,7 @@ public class AuthRealm extends AuthorizingRealm {
      */
     @Override
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principalCollection) {
-        User user = (User) super.getAvailablePrincipal(principalCollection);
+        User user = (User)super.getAvailablePrincipal(principalCollection);
         SimpleAuthorizationInfo authorizationInfo = new SimpleAuthorizationInfo();
         // 获取数据库的记录
         Set<String> roles = shiroSampleDao.getRolesByUserId(user.getUid());

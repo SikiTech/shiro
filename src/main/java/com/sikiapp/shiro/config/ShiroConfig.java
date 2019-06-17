@@ -7,12 +7,14 @@
  */
 package com.sikiapp.shiro.config;
 
+import org.apache.shiro.authc.credential.HashedCredentialsMatcher;
 import org.apache.shiro.spring.LifecycleBeanPostProcessor;
 import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
@@ -33,9 +35,26 @@ public class ShiroConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(ShiroConfig.class);
 
+    /**
+     * 这里需要设置成与PasswordEncrypter类相同的加密规则
+     * 在doGetAuthenticationInfo认证登陆返回SimpleAuthenticationInfo时会使用hashedCredentialsMatcher
+     * 把用户填入密码加密后生成散列码与数据库对应的散列码进行对比
+     * HashedCredentialsMatcher会自动根据AuthenticationInfo的类型是否是SaltedAuthenticationInfo来获取credentialsSalt盐
+     * @return
+     */
+    @Bean("hashedCredentialsMatcher")
+    public HashedCredentialsMatcher hashedCredentialsMatcher() {
+        HashedCredentialsMatcher hashedCredentialsMatcher = new HashedCredentialsMatcher();
+        hashedCredentialsMatcher.setHashAlgorithmName("MD5");// 散列算法, 与注册时使用的散列算法相同
+        hashedCredentialsMatcher.setHashIterations(2);// 散列次数, 与注册时使用的散列册数相同
+        hashedCredentialsMatcher.setStoredCredentialsHexEncoded(true);// 生成16进制, 与注册时的生成格式相同
+        return hashedCredentialsMatcher;
+    }
+
     @Bean(name = "authRealm")
-    public AuthRealm authRealm() {
+    public AuthRealm authRealm(@Qualifier("hashedCredentialsMatcher") HashedCredentialsMatcher hashedCredentialsMatcher) {
         AuthRealm authRealm = new AuthRealm();
+        authRealm.setCredentialsMatcher(hashedCredentialsMatcher);
         return authRealm;
     }
 
@@ -43,6 +62,7 @@ public class ShiroConfig {
     @DependsOn(value = {"authRealm"})
     public DefaultWebSecurityManager getDefaultWebSecurityManager(AuthRealm authRealm) {
         DefaultWebSecurityManager defaultWebSecurityManager = new DefaultWebSecurityManager();
+        // 设置加密算法
         defaultWebSecurityManager.setRealm(authRealm);
         return defaultWebSecurityManager;
     }
@@ -86,7 +106,8 @@ public class ShiroConfig {
         filterChainDefinitionMap.put("/user/logout", "anon");
         filterChainDefinitionMap.put("/resource/**", "anon");
         filterChainDefinitionMap.put("/install", "anon");
-        filterChainDefinitionMap.put("t5/hello", "anon");
+        filterChainDefinitionMap.put("/t5/hello", "anon");
+        filterChainDefinitionMap.put("/user/register", "anon");
         logger.info("##################从数据库读取权限规则，加载到shiroFilter中##################");
 
         // 不用注解也可以通过 API 方式加载权限规则
@@ -96,6 +117,7 @@ public class ShiroConfig {
         filterChainDefinitionMap.put("/**", "authc");
         shiroFilterFactoryBean.setFilterChainDefinitionMap(filterChainDefinitionMap);
     }
+
 
 
 }
