@@ -51,7 +51,7 @@ public class AuthRealm extends AuthorizingRealm {
 //        User user = shiroSampleDao.findUserByName(username);
         User user = AuthorizationService.USERS_CACHE.get(username);
 
-        // 第一个参数principal 表示用户信息，
+        // principal：认证的实体信息
         SimpleAuthenticationInfo info = new SimpleAuthenticationInfo(user, user.getPwd(), super.getName());
         // 如果设置了加盐，则使用加密算法
         if (user.getSalt() != null) {
