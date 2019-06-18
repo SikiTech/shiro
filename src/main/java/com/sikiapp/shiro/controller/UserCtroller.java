@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -43,6 +44,11 @@ public class UserCtroller {
     @GetMapping("/login")
     public String login(String username, String password) throws Exception {
          return authorizationService.login(username, password);
+    }
+
+    @PostMapping("/login")
+    public String loginx(String username, String password, Boolean rememberMe) throws Exception {
+        return authorizationService.loginRemem(username, password, rememberMe);
     }
 
     @GetMapping("/logout")

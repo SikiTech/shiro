@@ -7,7 +7,9 @@
  */
 package com.sikiapp.shiro.controller;
 
+import com.sikiapp.shiro.dao.ShiroSampleDao;
 import org.apache.shiro.authz.annotation.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -23,6 +25,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/t1")
 public class ShiroAnotationController {
+
+    @Autowired
+    private ShiroSampleDao shiroSampleDao;
+
     // 由于TestController类上没有加@RequiresAuthentication注解，
     // 不要求用户登录才能调用接口。所以hello()和a1()接口都是可以匿名访问的
     @GetMapping("/hello")
@@ -92,6 +98,21 @@ public class ShiroAnotationController {
     public String python() {
         return "python programmer";
     }
+
+    @RequiresPermissions("linux")
+    @GetMapping("/linux")
+    public String linuxOpt() {
+        return "linux";
+    }
+
+
+    @GetMapping("/addPerm")
+    public String addPerm(String perm) {
+        shiroSampleDao.addPerm(perm);
+        return "添加权限成功";
+    }
+
+
 
 
 }

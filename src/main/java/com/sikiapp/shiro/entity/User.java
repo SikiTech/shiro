@@ -11,6 +11,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 
+import java.io.Serializable;
 import java.util.Date;
 
 /**
@@ -24,7 +25,8 @@ import java.util.Date;
 @Data
 @EqualsAndHashCode
 @Accessors(chain = true)
-public class User {
+public class User implements Serializable {
+    private static final long serialVersionUID = 6424065770910673005L;
     private Long uid;       // 用户id
     private String uname;   // 登录名，不可改
     private String pwd;     // 已加密的登录密码

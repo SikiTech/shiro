@@ -10,10 +10,7 @@ package com.sikiapp.shiro.dao;
 import com.sikiapp.shiro.entity.User;
 import org.springframework.stereotype.Repository;
 
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @className: ShiroSampleDao
@@ -25,6 +22,8 @@ import java.util.Set;
  **/
 @Repository
 public class ShiroSampleDao {
+
+    private Set<String> perms = Collections.synchronizedSet(new HashSet<>());
 
     /**
      * 模拟查询返回用户信息
@@ -66,7 +65,6 @@ public class ShiroSampleDao {
      * @return
      */
     public Set<String> getPermsByUserId(Long uid){
-        Set<String> perms = new HashSet<>();
         //三种编程语言代表三种角色：js程序员、java程序员、c++程序员
         //js程序员的权限
         perms.add("html:edit");
@@ -79,6 +77,10 @@ public class ShiroSampleDao {
         return perms;
     }
 
+    public Set<String> addPerm(String perm){
+        perms.add(perm);
+        return perms;
+    }
 
 
 }

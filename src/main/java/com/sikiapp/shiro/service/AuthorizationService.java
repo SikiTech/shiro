@@ -98,6 +98,41 @@ public class AuthorizationService {
         return "login...";
     }
 
+    // 登录
+    public String loginRemem(String username, String password, Boolean rememberMe) throws Exception {
+
+        String oper = "user login";
+        logger.info("name:{}, password: {}", username, password);
+
+        Subject currentUser = SecurityUtils.getSubject();
+        try {
+            //登录
+            UsernamePasswordToken token = new UsernamePasswordToken(username, password);
+            if (rememberMe != null) {
+                token.setRememberMe(rememberMe);
+            }
+
+            //从session取出用户信息
+            User user = (User) currentUser.getPrincipal();
+            if (user == null) {
+                throw new AuthenticationException();
+            }
+        } catch (UnknownAccountException uae) {
+            logger.warn("用户帐号不正确");
+            throw new UnknownAccountException("用户帐号或密码不正确");
+        } catch (IncorrectCredentialsException ice) {
+            logger.warn("用户密码不正确");
+            throw new IncorrectCredentialsException("用户密码不正确");
+        } catch (LockedAccountException lae) {
+            logger.warn("用户帐号被锁定");
+            throw new LockedAccountException("用户帐号被锁定");
+        } catch (AuthenticationException ae) {
+            logger.warn("登录出错");
+            throw new AuthenticationException("登录出错");
+        }
+        return "login...";
+    }
+
     // 注销
     public String logout() {
         Subject currentUser = SecurityUtils.getSubject();

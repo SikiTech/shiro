@@ -44,8 +44,7 @@ public class AuthRealm extends AuthorizingRealm {
      * CredentialsMatcher使用盐加密传入的明文密码和此处的密文密码进行匹配。
      */
     @Override
-    protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken authenticationToken) throws AuthenticationException {
-        UsernamePasswordToken token = (UsernamePasswordToken) authenticationToken;
+    protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken authenticationToken) throws AuthenticationException { UsernamePasswordToken token = (UsernamePasswordToken) authenticationToken;
         String username = token.getUsername();
         // 获取密文密码
 //        User user = shiroSampleDao.findUserByName(username);
