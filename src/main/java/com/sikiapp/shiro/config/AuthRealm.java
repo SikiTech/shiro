@@ -10,6 +10,7 @@ package com.sikiapp.shiro.config;
 import com.sikiapp.shiro.dao.ShiroSampleDao;
 import com.sikiapp.shiro.entity.User;
 import com.sikiapp.shiro.service.AuthorizationService;
+import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.*;
 import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
@@ -73,6 +74,11 @@ public class AuthRealm extends AuthorizingRealm {
         authorizationInfo.setRoles(roles);
         authorizationInfo.addStringPermissions(perms);
         return authorizationInfo;
+    }
+
+    public void clearCachedAuthorization(){
+        //清空权限缓存
+        clearCachedAuthorizationInfo(SecurityUtils.getSubject().getPrincipals());
     }
 
 }

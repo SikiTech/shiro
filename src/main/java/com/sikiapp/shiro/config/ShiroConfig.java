@@ -119,6 +119,7 @@ public class ShiroConfig {
     public DefaultAdvisorAutoProxyCreator getDefaultAdvisorAutoProxyCreator() {
         // 在@Controller注解的类的方法中加入@RequiresRole等shiro注解，会导致该方法无法映射请求，导致返回404
         DefaultAdvisorAutoProxyCreator autoProxyCreator = new DefaultAdvisorAutoProxyCreator();
+        // 强制使用cglib
         autoProxyCreator.setProxyTargetClass(true);
         return autoProxyCreator;
     }
@@ -156,6 +157,12 @@ public class ShiroConfig {
         filterChainDefinitionMap.put("/install", "anon");
         filterChainDefinitionMap.put("/t5/hello", "anon");
         filterChainDefinitionMap.put("/user/register", "anon");
+
+        //本地静态文件放权
+        filterChainDefinitionMap.put("/css/**", "anon");
+        filterChainDefinitionMap.put("/js/**", "anon");
+        filterChainDefinitionMap.put("/img/**", "anon");
+
         logger.info("##################从数据库读取权限规则，加载到shiroFilter中##################");
 
         // 不用注解也可以通过 API 方式加载权限规则

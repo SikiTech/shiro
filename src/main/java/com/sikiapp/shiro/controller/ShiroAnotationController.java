@@ -7,8 +7,11 @@
  */
 package com.sikiapp.shiro.controller;
 
+import com.sikiapp.shiro.config.AuthRealm;
 import com.sikiapp.shiro.dao.ShiroSampleDao;
+import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.annotation.*;
+import org.apache.shiro.mgt.RealmSecurityManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -109,6 +112,11 @@ public class ShiroAnotationController {
     @GetMapping("/addPerm")
     public String addPerm(String perm) {
         shiroSampleDao.addPerm(perm);
+        // 刷新权限
+        RealmSecurityManager rsm = (RealmSecurityManager)SecurityUtils.getSecurityManager();
+        AuthRealm realm = (AuthRealm)rsm.getRealms().iterator().next();
+        realm.clearCachedAuthorization();
+
         return "添加权限成功";
     }
 
